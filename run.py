@@ -7,8 +7,10 @@ from scipy.stats import pearsonr
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
 
-def calc_et_weight(temp, lai, temp_w, lai_w):
+def calc_et_weight(temp, lai, w):
     """Calculate influence of LAI and temperature on ET."""
+    # Get coefficients for temperature and lai
+    w = temp_w, lai_w
 
     # Scale data
     data = pd.DataFrame({'temp': temp, 'lai': lai})
@@ -58,7 +60,7 @@ def water_balance(wn, Pn, Rn, Snown, Tn, cs, alpha, beta, gamma, c_m):
 
 
 def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
-        beta, gamma, c_m, lai_weight, temp_weight):
+        beta, gamma, c_m, et_weight):
     """Calculates the time evolution of the soil moisture, runoff and evapotranspiration.
     Input:  w_0: initial soil moisture [mm]
             P_data: precipitation data [m/day]
@@ -79,7 +81,7 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
                  'evapotranspiration', 'snow', 'Temperature'])
 
     # Precompute ET parameter
-    et_coefs = beta * calc_et_weight(T_data, lai_data, temp_weight, lai_weight)
+    et_coefs = beta * calc_et_weight(T_data, lai_data, et_weight)
 
     for t in range(1, len(P_data)):
         P = P_data[t - 1]
@@ -92,11 +94,11 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
         w_0 = w
         Snow_0 = snow
 
-    return (output_df)
+    return output_df
 
 
 def calibration(P_data, R_data, T_data, lai_data, meas_run, calibration_time,
-        cs_values, alpha_values, gamma_values, beta_values, cm_values):
+        cs_values, alpha_values, gamma_values, beta_values, cm_values, et_weights):
     """Calibrates the model to the runoff data.
     P_data: list of precipitation data [m/day]
     R_data: list of net radiation data [J/day/m**2]
@@ -114,7 +116,7 @@ def calibration(P_data, R_data, T_data, lai_data, meas_run, calibration_time,
 
     parameter_combinations = list(
         itertools.product(cs_values, alpha_values, gamma_values, beta_values,
-                          cm_values))
+                          cm_values, et_weights))
 
     total_runs = len(parameter_combinations)
 
