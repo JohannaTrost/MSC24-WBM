@@ -11,7 +11,7 @@ def runoff(wn, Pn, cs, alpha):
 def evapotranspiration(wn, Rn, cs, beta, gamma):
     return beta * (wn / cs)**gamma * Rn
 
-def snow(Snow_n, P_n, T_n, c_m):         # Returns 1. Amount of snow after a time step and 2. Amount of water coming into the soil (liquid rain and/or melting snow)
+def snow_function(Snow_n, P_n, T_n, c_m):         # Returns 1. Amount of snow after a time step and 2. Amount of water coming into the soil (liquid rain and/or melting snow)
     if T_n <= 273.15:                    # Snow stays on the ground
         return Snow_n + P_n, 0
     elif Snow_n < 0.001:            # no accumulated snow and temperature above 0 degrees -> return "0 accumulated snow" and treat precipitation as rain
@@ -24,7 +24,7 @@ def snow(Snow_n, P_n, T_n, c_m):         # Returns 1. Amount of snow after a tim
             return Snow_n-SnowMelt, SnowMelt + P_n  # Some snow remains, some snow melts
 
 def water_balance(wn, Pn, Rn, Snown, Tn, cs, alpha, beta, gamma, c_m):
-    snow, Pn = snow(Snown, Pn, Tn, c_m)     # overwrites the precipitation (if snow melts or precipitation is accumulated as snow)
+    snow, Pn = snow_function(Snown, Pn, Tn, c_m)     # overwrites the precipitation (if snow melts or precipitation is accumulated as snow)
     Qn = runoff(wn, Pn, cs, alpha)
     En = evapotranspiration(wn, Rn, cs, beta, gamma)
     w_next = wn + (Pn - En - Qn)
@@ -47,12 +47,13 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, cs, alpha, beta, gamma, 
     conv = 1/ 2260000 # from J/day/m**2 to mm/day 
     R_data = R_data * conv 
     P_data = P_data * 10**3 # from m/day to mm/day
-    output_df = pd.DataFrame(columns=['time', 'R', 'P', 'calculated_soil_moisture', 'runoff', 'evapotranspiration', 'snow'])
+    output_df = pd.DataFrame(columns=['time', 'R', 'P', 'calculated_soil_moisture', 'runoff', 'evapotranspiration', 'snow', 'Temperature'])
     for t in range(1,len(P_data)):
         P = P_data[t-1]
         R = R_data[t-1]
-        q, e, w, snow = water_balance(w_0, P, R, Snow_0, T_data, cs, alpha, beta, gamma, c_m)
-        output_df.loc[t-1] = t, R, P, w_0, q, e, snow
+        T = T_data[t-1]
+        q, e, w, snow = water_balance(w_0, P, R, Snow_0, T, cs, alpha, beta, gamma, c_m)
+        output_df.loc[t-1] = t, R, P, w_0, q, e, snow, T
         w_0 = w
         Snow_0 = snow
 
