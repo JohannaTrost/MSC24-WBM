@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler, MinMaxScaler
 def calc_et_weight(temp, lai, w):
     """Calculate influence of LAI and temperature on ET."""
     # Get coefficients for temperature and lai
-    w = temp_w, lai_w
+    temp_w, lai_w = w
 
     # Scale data
     data = pd.DataFrame({'temp': temp, 'lai': lai})
