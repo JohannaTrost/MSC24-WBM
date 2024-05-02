@@ -15,6 +15,7 @@ def water_balance(wn, Pn, Rn, cs, alpha, beta, gamma):
     Qn = runoff(wn, Pn, cs, alpha)
     En = evapotranspiration(wn, Rn, cs, beta, gamma)
     w_next = wn + (Pn - En - Qn)
+    w_next = max(0, w_next)
     return Qn, En, w_next
 
 def time_evolution(w_0, P_data, R_data, cs, alpha, beta, gamma):
@@ -65,9 +66,9 @@ def calibration(P_data, R_data, meas_run, calibration_time, cs_values, alpha_val
     for run_number, params in enumerate(parameter_combinations, start=1):
         w_0 = 0.9 * params[0]
         output_df = time_evolution(w_0, P_calibration, R_calibration, *params)
-        
+        print(params)
         corr_P, _ = pearsonr(output_df['runoff']*100,meas_run['Value'][1:])  ### hier wird noch die falsche Variable genommen
-        print(corr_P)
+        #print(corr_P)
         if corr_P  > correlation_max:
             print(corr_P)
             correlation_max = corr_P
