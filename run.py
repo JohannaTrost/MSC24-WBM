@@ -59,7 +59,7 @@ def water_balance(wn, Pn, Rn, Snown, Tn, cs, alpha, beta, gamma, c_m):
 
 def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
         beta, gamma, c_m, lai_weight, temp_weight):
-    '''Calculates the time evolution of the soil moisture, runoff and evapotranspiration.
+    """Calculates the time evolution of the soil moisture, runoff and evapotranspiration.
     Input:  w_0: initial soil moisture [mm]
             P_data: precipitation data [m/day]
             R_data: net radiation data [J/day/m**2]
@@ -70,7 +70,7 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
             beta: evapotranspiration parameter
             gamma: evapotranspiration parameter
             c_m: snow melt parameter [mm/K/day]
-            Output: DataFrame with columns: time, Rn, Pr, calculated_soil_moisture, runoff, evapotranspiration'''
+            Output: DataFrame with columns: time, Rn, Pr, calculated_soil_moisture, runoff, evapotranspiration"""
     conv = 1 / 2260000  # from J/day/m**2 to mm/day
     R_data = R_data * conv
     P_data = P_data * 10 ** 3  # from m/day to mm/day
@@ -95,9 +95,9 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
     return (output_df)
 
 
-def calibration(P_data, R_data, meas_run, calibration_time, cs_values,
-        alpha_values, gamma_values, beta_values, cm_values):
-    '''Calibrates the model to the runoff data.
+def calibration(P_data, R_data, T_data, lai_data, meas_run, calibration_time,
+        cs_values, alpha_values, gamma_values, beta_values, cm_values):
+    """Calibrates the model to the runoff data.
     P_data: list of precipitation data [m/day]
     R_data: list of net radiation data [J/day/m**2]
     meas_run: measured runoff data [mm/day]
@@ -108,7 +108,7 @@ def calibration(P_data, R_data, meas_run, calibration_time, cs_values,
     beta_values: list of beta values
     cm_values: list of cm values
     Output: best_params: best parameter combination
-            best_output_df: DataFrame with columns: time, Rn, Pr, calculated_soil_moisture, runoff, evapotranspiration'''
+            best_output_df: DataFrame with columns: time, Rn, Pr, calculated_soil_moisture, runoff, evapotranspiration"""
     P_calibration = np.concatenate(P_data[0:calibration_time])
     R_calibration = np.concatenate(R_data[0:calibration_time])
 
@@ -124,7 +124,9 @@ def calibration(P_data, R_data, meas_run, calibration_time, cs_values,
         w_0 = 0.9 * params[0]
         Snow_0 = 0
         output_df = time_evolution(w_0, P_calibration, R_calibration, Snow_0,
+                                   T_data, lai_data,
                                    *params)
+
         print(params)
         corr_P, _ = pearsonr(output_df['runoff'] * 100, meas_run['Value'][
                                                         1:])  ### hier wird noch die falsche Variable genommen
