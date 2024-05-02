@@ -7,8 +7,8 @@ folder_path = '/Users/justusnogel/Documents/applied_landsurface_modelling/catchm
 # Define the output file path
 output_file_path = '/Users/justusnogel/Documents/applied_landsurface_modelling/catchment_coordinates_donau.txt'
 
-# Open the output file in append mode
-with open(output_file_path, "a") as outfile:
+# Open the output file in writing mode
+with open(output_file_path, "w") as outfile:
     outfile.write("GRDC,latitude,longitude,catchment_area\n")  # Write header to the output file
 
     # Loop through all files in the folder
