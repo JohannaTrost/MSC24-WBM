@@ -20,19 +20,19 @@ calibration_time = [2000,2010]
 
 # get radiation and precipitation data from netCDF files
 for year in years:
-    file_path = 'C:/Users/User/Documents/AppliedLandsurfaceModeling/Data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
+    file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
     nc_file = nc.Dataset(file_path)
     P_data.append(nc_file.variables['tp'][:,0,0])
     dates = nc_file.variables['time'][:]
     nc_file.close()
 
-    file_path = 'C:/Users/User/Documents/AppliedLandsurfaceModeling/Data/net_radiation/nr.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
+    file_path = 'data/net_radiation/nr.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
     nc_file = nc.Dataset(file_path)
     #print(nc_file)
     R_data.append(nc_file.variables['nr'][:,0,0])
     nc_file.close()
 
-    file_path = 'C:/Users/User/Documents/AppliedLandsurfaceModeling/Data/daily_average_temperature/t2m_mean.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
+    file_path = 'data/daily_average_temperature/t2m_mean.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
     nc_file = nc.Dataset(file_path)
     T_data.append(nc_file.variables['air_temperature'][:,0,0])
     nc_file.close()
