@@ -10,10 +10,12 @@ cs_values = [210, 420, 840]
 alpha_values = [2, 4, 8]
 gamma_values = [0.2, 0.5, 0.8]
 beta_values = [0.4, 0.6, 0.8]
+cm_values = [1.5, 2, 2.5] 
 # define w_0
 years = np.arange(2000,2024,1)
 P_data = []
 R_data = []
+T_data = []
 calibration_time = [2000,2010]
 
 # get radiation and precipitation data from netCDF files
@@ -23,10 +25,16 @@ for year in years:
     P_data.append(nc_file.variables['tp'][:,0,0])
     dates = nc_file.variables['time'][:]
     nc_file.close()
+
     file_path = 'C:/Users/User/Documents/AppliedLandsurfaceModeling/Data/net_radiation/nr.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
     nc_file = nc.Dataset(file_path)
     #print(nc_file)
     R_data.append(nc_file.variables['nr'][:,0,0])
+    nc_file.close()
+
+    file_path = 'C:/Users/User/Documents/AppliedLandsurfaceModeling/Data/daily_average_temperature/t2m_mean.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
+    nc_file = nc.Dataset(file_path)
+    T_data.append(nc_file.variables['air_temperature'][:,0,0])
     nc_file.close()
 # get calibration data
 
