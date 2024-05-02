@@ -18,6 +18,13 @@ R_data = []
 T_data = []
 calibration_time = [2000,2010]
 
+# define dummy LAI with sinus function
+n_time_steps = 
+freq = 2 * np.pi / 365  # Frequency of the curve for one year
+sinus_curve = .5 * np.sin(freq * np.arange(n_time_steps) + 5)
+sinus_curve += .8  # Centered at 0.8
+LAI = sinus_curve.copy()
+
 # get radiation and precipitation data from netCDF files
 for year in years:
     file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
