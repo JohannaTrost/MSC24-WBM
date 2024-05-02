@@ -1,5 +1,6 @@
 import os
 
+
 # Define the folder path
 folder_path = '/Users/justusnogel/Documents/applied_landsurface_modelling/catchment_donau/'
 
@@ -25,7 +26,7 @@ with open(output_file_path, "a") as outfile:
 
             # Check if catchment area is above 300
             if float(area_line) < 300 and 4.75 <= float(longitude_line) <= 15.25 and 44.75 <= float(latitude_line) <= 55.25:
-
+                print(longitude_line)
                 # Write latitude, longitude, and GRDC number to the output file
                 outfile.write("{},{},{},{}\n".format(grdc_number, latitude_line, longitude_line, area_line))
 
