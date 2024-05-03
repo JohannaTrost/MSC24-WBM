@@ -5,96 +5,127 @@ import netCDF4 as nc
 import itertools
 from scipy.stats import pearsonr
 import run
+import os
 
+os.makedirs('calibration_results', exist_ok=True)
+
+#import tqdm
+#Only changes needed
+folder_number = 10
+# define calibration parameter
 cs_values = [210, 420, 840]
 alpha_values = [2, 4, 8]
 gamma_values = [0.2, 0.5, 0.8]
 beta_values = [0.4, 0.6, 0.8]
 cm_values = [1.5, 2, 2.5]
 et_weights = [(.5, .5), (.25, .75), (.75, .25)]
-# define w_0
-years = np.arange(2000,2024,1) 
-P_data = []
+parameter_combinations = list(
+    itertools.product(cs_values, alpha_values, gamma_values, beta_values, cm_values, et_weights))
+#parameter_combinations = parameter_combinations[0:5]
+# define w_0    
+years = np.arange(2000,2024,1)
+
 R_data = []
 T_data = []
+P_data = []
 lai_data = []
 calibration_time = [2000,2010]
+file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.2000.nc' # no need to change
+folder_path = 'data/catchment_sample/sample_selection_'+str(folder_number)
 
-# get radiation and precipitation data from netCDF files
-for year in years:
-    file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
-    nc_file = nc.Dataset(file_path)
-    P_data.append(nc_file.variables['tp'][:,0,0])
-    dates = nc_file.variables['time'][:]
-    nc_file.close()
-
-    file_path = 'data/net_radiation/nr.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
-    nc_file = nc.Dataset(file_path)
-    #print(nc_file)
-    R_data.append(nc_file.variables['nr'][:,0,0])
-    nc_file.close()
-
-    file_path = 'data/daily_average_temperature/t2m_mean.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
-    nc_file = nc.Dataset(file_path)
-    T_data.append(nc_file.variables['t2m'][:,0,0])
-    nc_file.close()
+nc_file = nc.Dataset(file_path)
+lon = nc_file.variables['lon'][:]
+lat = nc_file.variables['lat'][:]
+nc_file.close()
+    # Loop through all files in the folder
+counter = 1
+for filename in os.listdir(folder_path):
     
-    file_path = 'data/lai/lai.daily.0d50_CentralEurope.'+str(year)+'.nc'
-    nc_file = nc.Dataset(file_path)
-    lai_data.append(nc_file.variables['lai'][:,0,0])
-    nc_file.close()
-
+    # Init df for current catchment 
+    comb_corr_df = pd.DataFrame(columns=['parameters'])
+    comb_corr_df['parameters'] = parameter_combinations
     
-# get calibration data
+    data = []
+    header_lines_to_skip = 0
+    if filename.endswith(".txt"):  # Check if the file is a text file
+         file_path = os.path.join(folder_path, filename)
+    with open(file_path, "r", encoding='latin1') as file:
+        for line in file:
+            if line.startswith("# Latitude"):
+                latitude = float(line.split(":")[1].strip())
+            elif line.startswith("# Longitude"):
+                longitude = float(line.split(":")[1].strip())
 
-# Define the file path
-file_path = "data/catchments/processed/6337521_Q_Day.Cmd.txt"
+    a = np.where(abs(lon-longitude) == min(abs(lon-longitude)))[0][0]
+    b = np.where(abs(lat-latitude) == min(abs(lat-latitude)))[0][0]
+    # now is the time where you could rund a calibration
+    with open(file_path, "r", encoding='latin1') as file:
+        for line in file:
+            # Skip header lines until "DATA" section
+            if line.strip() == "# DATA":
+                header_lines_to_skip += 1
+                break
+            else:
+                header_lines_to_skip += 1
 
-# Initialize variables to store data
-data = []
-header_lines_to_skip = 0
+    # Define column names to read
+    columns_to_read = ["YYYY-MM-DD", "Value"]
 
-# Read the file line by line
-with open(file_path, "r") as file:
-    for line in file:
-        # Skip header lines until "DATA" section
-        if line.strip() == "# DATA":
-            header_lines_to_skip += 1
-            break
-        else:
-            header_lines_to_skip += 1
+    # Read data into DataFrame using pandas, skipping the header lines and selecting specific columns
+    df = pd.read_csv(file_path, sep=";", skiprows=header_lines_to_skip, skipinitialspace=True, usecols=columns_to_read, encoding='latin1')
 
-# Define column names to read
-columns_to_read = ["YYYY-MM-DD", "Value"]
+    # Convert the 'YYYY-MM-DD' column to datetime format
+    df['YYYY-MM-DD'] = pd.to_datetime(df['YYYY-MM-DD'])
 
-# Read data into DataFrame using pandas, skipping the header lines and selecting specific columns
-df = pd.read_csv(file_path, sep=";", skiprows=header_lines_to_skip, skipinitialspace=True, usecols=columns_to_read, encoding='latin1')
+    # Filter the DataFrame to include only the data between January 1, 2000, and December 31, 2020
+    end_date = pd.to_datetime(str(calibration_time[1] - 1) + '-12-31')
+    start_date = pd.to_datetime(str(calibration_time[0]) + '-01-01')
+    filtered_df = df[(df['YYYY-MM-DD'] >= start_date) & (df['YYYY-MM-DD'] <= end_date)]
+    # get radiation, temperature and precipitation data from netCDF files
+    for year in years:   
+        file_path1 = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
+        nc_file = nc.Dataset(file_path1)
+        # 7,8 is the grid cell of interest for the respective catchment area
+        dates = nc_file.variables['time'][:]
+        P_data.append(nc_file.variables['tp'][:,b,a])
+        nc_file.close()
+        file_path1 = 'data/net_radiation/nr.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
+        nc_file = nc.Dataset(file_path1)
+        #print(nc_file)
+        R_data.append(nc_file.variables['nr'][:,b,a])
+        nc_file.close()
+        file_path1 = 'data/daily_average_temperature/t2m_mean.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
+        nc_file = nc.Dataset(file_path1)
+        T_data.append(nc_file.variables['t2m'][:,b,a])
+        nc_file.close()  
+        file_path1 = 'data/lai/lai.daily.0d50_CentralEurope.'+str(year)+'.nc'
+        nc_file = nc.Dataset(file_path1)
+        lai_data.append(nc_file.variables['lai'][:,b,a])
+        nc_file.close()  
 
-# Convert the 'YYYY-MM-DD' column to datetime format
-df['YYYY-MM-DD'] = pd.to_datetime(df['YYYY-MM-DD'])
+    comb_corr_df[str(latitude), str(longitude)] = run.calibration_allcatchments(P_data, R_data, T_data,lai_data, filtered_df, calibration_time[1]-calibration_time[0], parameter_combinations)
+    print(counter, 'catchment(s) done')
+    
+    file_id = os.path.basename(file_path).split('_')[0]
+    
+    comb_corr_df.to_csv(
+        f'calibration_results/corr_df{folder_number}_{file_id}.csv',
+        sep=' ', index=False)
 
-# Filter the DataFrame to include only the data between January 1, 2000, and December 31, 2020
-end_date = pd.to_datetime(str(calibration_time[1] - 1) + '-12-31')
-start_date = pd.to_datetime(str(calibration_time[0]) + '-01-01')
-filtered_df = df[(df['YYYY-MM-DD'] >= start_date) & (df['YYYY-MM-DD'] <= end_date)]
-print(filtered_df)
+    counter += 1
+    
+print(comb_corr_df)
 
-# define dummy LAI with sinus function
-n_time_steps = np.concatenate(T_data).shape[0]
-freq = 2 * np.pi / 365  # Frequency of the curve for one year
-sinus_curve = .5 * np.sin(freq * np.arange(n_time_steps) + 5)
-sinus_curve += .8  # Centered at 0.8
-LAI = sinus_curve.copy()
+print(r"""\
+
+                                   ._ o o
+                                   \_`-)|_
+                                ,""       \ 
+                              ,"  ## |   ಠ ಠ. 
+                            ," ##   ,-\__    `.
+                          ,"       /     `--._;) -- CONGRATS, YOU DID IT!!!
+                        ,"     ## /
+                      ,"   ##    /
 
 
-params, best_run = run.calibration(P_data, R_data, LAI, filtered_df, 
-                                   calibration_time[1]-calibration_time[0], 
-                                   cs_values, alpha_values, gamma_values, 
-                                   beta_values, cm_values, et_weights)
-
-print(params)
-plt.plot(best_run['time'][-365:], best_run['runoff'][-365:], label='Runoff')
-plt.plot(best_run['time'][-365:], filtered_df['Value'][1:][-365:], label='Measured Runoff')
-plt.legend()
-plt.ylabel('mm/day')
-plt.show()
+                """)
