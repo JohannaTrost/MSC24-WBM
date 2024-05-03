@@ -83,7 +83,7 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
     # Precompute ET parameter
     et_coefs = beta * calc_et_weight(T_data, lai_data, et_weight)
 
-    for t in range(1, len(P_data)):
+    for t in range(1, len(P_data) + 1):
         P = P_data[t - 1]
         R = R_data[t - 1]
         T = T_data[t - 1]
