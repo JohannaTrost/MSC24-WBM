@@ -15,16 +15,16 @@ def calc_et_weight(temp, lai, w):
     # Scale data
     data = pd.DataFrame({'temp': temp, 'lai': lai})
     scale = MinMaxScaler()
-    scaled_data = scale.fit_transform(data)
+    scaled_data = pd.DataFrame(scale.fit_transform(data), columns=data.columns)
 
     # Weight Temperature and LAI
     et_coef = temp_w * scaled_data['temp'] + lai_w * scaled_data['lai']
 
     # Scale between 0 and 1
     scaler = MinMaxScaler()
-    et_coef_scaled = scaler.fit_transform(et_coef)
+    et_coef_scaled = scaler.fit_transform(np.asarray(et_coef).reshape(-1, 1))
 
-    return et_coef_scaled
+    return et_coef_scaled.flatten()
 
 
 def runoff(wn, Pn, cs, alpha):
