@@ -7,4 +7,5 @@ Final version of the Simple Waterbalance Model (SWBM) including:
   LAI data:
   * spanning from 2000-2018
   * for the last 5 years we repeat the last 5 existig years
+  * missing data for some pixels (water)
 
