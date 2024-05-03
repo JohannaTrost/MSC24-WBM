@@ -10,20 +10,14 @@ cs_values = [210, 420, 840]
 alpha_values = [2, 4, 8]
 gamma_values = [0.2, 0.5, 0.8]
 beta_values = [0.4, 0.6, 0.8]
-cm_values = [1.5, 2, 2.5] 
+cm_values = [1.5, 2, 2.5]
+et_weights = [(.5, .5), (.25, .75), (.75, .25)]
 # define w_0
 years = np.arange(2000,2024,1)
 P_data = []
 R_data = []
 T_data = []
 calibration_time = [2000,2010]
-
-# define dummy LAI with sinus function
-n_time_steps = 
-freq = 2 * np.pi / 365  # Frequency of the curve for one year
-sinus_curve = .5 * np.sin(freq * np.arange(n_time_steps) + 5)
-sinus_curve += .8  # Centered at 0.8
-LAI = sinus_curve.copy()
 
 # get radiation and precipitation data from netCDF files
 for year in years:
@@ -77,7 +71,18 @@ start_date = pd.to_datetime(str(calibration_time[0]) + '-01-01')
 filtered_df = df[(df['YYYY-MM-DD'] >= start_date) & (df['YYYY-MM-DD'] <= end_date)]
 print(filtered_df)
 
-params, best_run = run.calibration(P_data, R_data, filtered_df, calibration_time[1]-calibration_time[0], cs_values, alpha_values, gamma_values, beta_values)
+# define dummy LAI with sinus function
+n_time_steps = len(filtered_df)
+freq = 2 * np.pi / 365  # Frequency of the curve for one year
+sinus_curve = .5 * np.sin(freq * np.arange(n_time_steps) + 5)
+sinus_curve += .8  # Centered at 0.8
+LAI = sinus_curve.copy()
+
+
+params, best_run = run.calibration(P_data, R_data, LAI, filtered_df, 
+                                   calibration_time[1]-calibration_time[0], 
+                                   cs_values, alpha_values, gamma_values, 
+                                   beta_values, cm_values, et_weights)
 
 print(params)
 plt.plot(best_run['time'][-365:], best_run['runoff'][-365:], label='Runoff')
