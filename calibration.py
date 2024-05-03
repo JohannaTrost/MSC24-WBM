@@ -40,7 +40,7 @@ for year in years:
 # get calibration data
 
 # Define the file path
-file_path = "C:/Users/User/Documents/AppliedLandsurfaceModeling/Weser/6337521_Q_Day.Cmd.txt"
+file_path = "data/catchments/processed/6337521_Q_Day.Cmd.txt"
 
 # Initialize variables to store data
 data = []
