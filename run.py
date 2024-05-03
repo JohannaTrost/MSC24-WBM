@@ -20,11 +20,7 @@ def calc_et_weight(temp, lai, w):
     # Weight Temperature and LAI
     et_coef = temp_w * scaled_data['temp'] + lai_w * scaled_data['lai']
 
-    # Scale between 0 and 1
-    scaler = MinMaxScaler()
-    et_coef_scaled = scaler.fit_transform(np.asarray(et_coef).reshape(-1, 1))
-
-    return et_coef_scaled.flatten()
+    return np.asarray(et_coef)
 
 
 def runoff(wn, Pn, cs, alpha):
@@ -85,7 +81,7 @@ def time_evolution(P_data, R_data, T_data, lai_data, cs, alpha,
     # Precompute ET parameter
     et_coefs = beta * calc_et_weight(T_data, lai_data, et_weight)
 
-    for t in range(1, len(P_data)):
+    for t in range(1, len(P_data) + 1):
         P = P_data[t - 1]
         R = R_data[t - 1]
         T = T_data[t - 1]
@@ -131,8 +127,7 @@ def calibration(P_data, R_data, T_data, lai_data, meas_run, calibration_time,
                                    *params)
 
         print(params)
-        corr_P, _ = pearsonr(output_df['runoff'] * 100, meas_run['Value'][
-                                                        1:])  ### hier wird noch die falsche Variable genommen
+        corr_P, _ = pearsonr(output_df['runoff'] * 100, meas_run['Value'])  ### hier wird noch die falsche Variable genommen
         # print(corr_P)
         if corr_P > correlation_max:
             print(corr_P)
@@ -164,9 +159,8 @@ def calibration_allcatchments(P_data, R_data, T_data, lai_data, meas_run, calibr
     total_runs = len(parameter_combinations)
 
     for run_number, params in enumerate(parameter_combinations, start=1):
-        w_0 = 0.9 * params[0]
         output_df = time_evolution(P_calibration, R_calibration, T_calibration, lai_calibration, *params)
-        corr_P, _ = pearsonr(output_df['runoff'],meas_run['Value'][1:])  
+        corr_P, _ = pearsonr(output_df['runoff'],meas_run['Value'])
         corr.append(corr_P)
         if run_number % 10 == 0:
             print(f'Run {run_number}/{total_runs} done')

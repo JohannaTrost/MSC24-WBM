@@ -6,7 +6,7 @@ import itertools
 from scipy.stats import pearsonr
 import run
 import os
-import tqdm
+#import tqdm
 #Only changes needed
 folder_number = 1
 # define calibration parameter
@@ -18,11 +18,10 @@ cm_values = [1.5, 2, 2.5]
 et_weights = [(.5, .5), (.25, .75), (.75, .25)]
 parameter_combinations = list(
     itertools.product(cs_values, alpha_values, gamma_values, beta_values, cm_values, et_weights))
-#parameter_combinations = parameter_combinations[0:20]
+#parameter_combinations = parameter_combinations[0:5]
 # define w_0    
 years = np.arange(2000,2024,1)
-comb_corr_df = pd.DataFrame(columns=['parameters'])
-comb_corr_df['parameters'] = parameter_combinations
+
 R_data = []
 T_data = []
 P_data = []
@@ -38,21 +37,26 @@ nc_file.close()
     # Loop through all files in the folder
 counter = 1
 for filename in os.listdir(folder_path):
+    
+    # Init df for current catchment 
+    comb_corr_df = pd.DataFrame(columns=['parameters'])
+    comb_corr_df['parameters'] = parameter_combinations
+    
     data = []
     header_lines_to_skip = 0
     if filename.endswith(".txt"):  # Check if the file is a text file
          file_path = os.path.join(folder_path, filename)
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding='latin1') as file:
         for line in file:
             if line.startswith("# Latitude"):
                 latitude = float(line.split(":")[1].strip())
             elif line.startswith("# Longitude"):
                 longitude = float(line.split(":")[1].strip())
 
-    a = int(np.where(abs(lon-longitude) == min(abs(lon-longitude)))[0])
-    b = int(np.where(abs(lat-latitude) == min(abs(lat-latitude)))[0])
+    a = np.where(abs(lon-longitude) == min(abs(lon-longitude)))[0][0]
+    b = np.where(abs(lat-latitude) == min(abs(lat-latitude)))[0][0]
     # now is the time where you could rund a calibration
-    with open(file_path, "r") as file:
+    with open(file_path, "r", encoding='latin1') as file:
         for line in file:
             # Skip header lines until "DATA" section
             if line.strip() == "# DATA":
@@ -98,11 +102,16 @@ for filename in os.listdir(folder_path):
 
     comb_corr_df[str(latitude), str(longitude)] = run.calibration_allcatchments(P_data, R_data, T_data,lai_data, filtered_df, calibration_time[1]-calibration_time[0], parameter_combinations)
     print(counter, 'catchment(s) done')
+    
+    file_id = os.path.basename(file_path).split('_')[0]
+    
+    comb_corr_df.to_csv(
+        f'calibration_results/corr_df{folder_number}_{file_id}.csv',
+        sep=' ', index=False)
+
     counter += 1
+    
 print(comb_corr_df)
-
-
-comb_corr_df.to_csv('calibration_results/comb_corr_df'+str(folder_number)+'.csv', sep=' ', index=False)
 
 print(r"""\
 

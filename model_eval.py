@@ -83,12 +83,14 @@ T_data = []
 lai_data = []
 calibration_time = [2000, 2010]
 
+lat, long = 14, 0
+
 # get radiation and precipitation data from netCDF files
 for year in years:
     file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.' + str(
         year) + '.nc'
     nc_file = nc.Dataset(file_path)
-    P_data.append(nc_file.variables['tp'][:, 0, 0])
+    P_data.append(nc_file.variables['tp'][:, lat, long])
     dates = nc_file.variables['time'][:]
     nc_file.close()
 
@@ -96,18 +98,18 @@ for year in years:
         year) + '.nc'
     nc_file = nc.Dataset(file_path)
     # print(nc_file)
-    R_data.append(nc_file.variables['nr'][:, 0, 0])
+    R_data.append(nc_file.variables['nr'][:, lat, long])
     nc_file.close()
 
     file_path = 'data/daily_average_temperature/t2m_mean.daily.calc.era5.0d50_CentralEurope.' + str(
         year) + '.nc'
     nc_file = nc.Dataset(file_path)
-    T_data.append(nc_file.variables['t2m'][:, 0, 0])
+    T_data.append(nc_file.variables['t2m'][:, lat, long])
     nc_file.close()
 
     file_path = 'data/lai/lai.daily.0d50_CentralEurope.' + str(year) + '.nc'
     nc_file = nc.Dataset(file_path)
-    lai_data.append(nc_file.variables['lai'][:, 0, 0])
+    lai_data.append(nc_file.variables['lai'][:, lat, long])
     nc_file.close()
 
 # define dummy LAI with sinus function
