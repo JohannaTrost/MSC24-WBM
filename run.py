@@ -78,7 +78,7 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
     P_data = P_data * 10 ** 3  # from m/day to mm/day
     output_df = pd.DataFrame(
         columns=['time', 'R', 'P', 'calculated_soil_moisture', 'runoff',
-                 'evapotranspiration', 'snow', 'Temperature'])
+                 'evapotranspiration', 'snow', 'Temperature', 'LAI'])
 
     # Precompute ET parameter
     et_coefs = beta * calc_et_weight(T_data, lai_data, et_weight)
@@ -88,9 +88,10 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
         R = R_data[t - 1]
         T = T_data[t - 1]
         et_coef = et_coefs[t - 1]
+        lai = lai_data[t - 1]
         q, e, w, snow = water_balance(w_0, P, R, Snow_0, T, cs, alpha,
                                       et_coef, gamma, c_m)
-        output_df.loc[t - 1] = t, R, P, w_0, q, e, snow, T
+        output_df.loc[t - 1] = t, R, P, w_0, q, e, snow, T, lai
         w_0 = w
         Snow_0 = snow
 
