@@ -35,7 +35,7 @@ for year in years:
 
     file_path = 'data/daily_average_temperature/t2m_mean.daily.calc.era5.0d50_CentralEurope.'+str(year)+'.nc'
     nc_file = nc.Dataset(file_path)
-    T_data.append(nc_file.variables['air_temperature'][:,0,0])
+    T_data.append(nc_file.variables['t2m'][:,0,0])
     nc_file.close()
 # get calibration data
 
@@ -72,7 +72,7 @@ filtered_df = df[(df['YYYY-MM-DD'] >= start_date) & (df['YYYY-MM-DD'] <= end_dat
 print(filtered_df)
 
 # define dummy LAI with sinus function
-n_time_steps = len(filtered_df)
+n_time_steps = np.concatenate(T_data).shape[0]
 freq = 2 * np.pi / 365  # Frequency of the curve for one year
 sinus_curve = .5 * np.sin(freq * np.arange(n_time_steps) + 5)
 sinus_curve += .8  # Centered at 0.8
