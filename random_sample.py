@@ -1,3 +1,3 @@
-sample_df = coords_df(n=50, replace=False)
-sample_df = sample_df.reset_index(drop=True)
-sample_df
+samples_df = coords_df.sample(n=50, replace=False)
+samples_df = samples_df.reset_index(drop=True)
+samples_df
