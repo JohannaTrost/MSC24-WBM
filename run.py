@@ -20,7 +20,11 @@ def calc_et_weight(temp, lai, w):
     # Weight Temperature and LAI
     et_coef = temp_w * scaled_data['temp'] + lai_w * scaled_data['lai']
 
-    return np.asarray(et_coef)
+    # Scale between 0 and 1
+    scaler = MinMaxScaler()
+    et_coef_scaled = scaler.fit_transform(np.asarray(et_coef).reshape(-1, 1))
+
+    return et_coef_scaled.flatten()
 
 
 def runoff(wn, Pn, cs, alpha):
@@ -55,8 +59,8 @@ def water_balance(wn, Pn, Rn, Snown, Tn, cs, alpha, beta, gamma, c_m):
     return Qn, En, w_next, snow
 
 
-def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
-        beta, gamma, c_m, et_weight):
+def time_evolution(P_data, R_data, T_data, lai_data, cs, alpha,
+        gamma, beta, c_m, et_weight):
     """Calculates the time evolution of the soil moisture, runoff and evapotranspiration.
     Input:  w_0: initial soil moisture [mm]
             P_data: precipitation data [m/day]
@@ -69,6 +73,8 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
             gamma: evapotranspiration parameter
             c_m: snow melt parameter [mm/K/day]
             Output: DataFrame with columns: time, Rn, Pr, calculated_soil_moisture, runoff, evapotranspiration"""
+    w_0 = 0.9 * cs
+    Snow_0 = 0
     conv = 1 / 2260000  # from J/day/m**2 to mm/day
     R_data = R_data * conv
     P_data = P_data * 10 ** 3  # from m/day to mm/day
@@ -79,46 +85,7 @@ def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
     # Precompute ET parameter
     et_coefs = beta * calc_et_weight(T_data, lai_data, et_weight)
 
-    for t in range(1, len(P_data) + 1):
-        P = P_data[t - 1]
-        R = R_data[t - 1]
-        T = T_data[t - 1]
-        et_coef = et_coefs[t - 1]
-        lai = lai_data[t - 1]
-        q, e, w, snow = water_balance(w_0, P, R, Snow_0, T, cs, alpha,
-                                      et_coef, gamma, c_m)
-        output_df.loc[t - 1] = t, R, P, w_0, q, e, snow, T, lai
-        w_0 = w
-        Snow_0 = snow
-
-    return output_df
-
-
-def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
-        beta, gamma, c_m, et_weight):
-    """Calculates the time evolution of the soil moisture, runoff and evapotranspiration.
-    Input:  w_0: initial soil moisture [mm]
-            P_data: precipitation data [m/day]
-            R_data: net radiation data [J/day/m**2]
-            Snow_0: initial Snow amount [mm] (equivalent amount of water)
-            T_data: temperature []
-            cs: Soil water holding capacity [mm]
-            alpha: runoff parameter
-            beta: evapotranspiration parameter
-            gamma: evapotranspiration parameter
-            c_m: snow melt parameter [mm/K/day]
-            Output: DataFrame with columns: time, Rn, Pr, calculated_soil_moisture, runoff, evapotranspiration"""
-    conv = 1 / 2260000  # from J/day/m**2 to mm/day
-    R_data = R_data * conv
-    P_data = P_data * 10 ** 3  # from m/day to mm/day
-    output_df = pd.DataFrame(
-        columns=['time', 'R', 'P', 'calculated_soil_moisture', 'runoff',
-                 'evapotranspiration', 'snow', 'Temperature', 'LAI'])
-
-    # Precompute ET parameter
-    et_coefs = beta * calc_et_weight(T_data, lai_data, et_weight)
-
-    for t in range(1, len(P_data) + 1):
+    for t in range(1, len(P_data)):
         P = P_data[t - 1]
         R = R_data[t - 1]
         T = T_data[t - 1]
@@ -159,9 +126,7 @@ def calibration(P_data, R_data, T_data, lai_data, meas_run, calibration_time,
     correlation_max = 0
 
     for run_number, params in enumerate(parameter_combinations, start=1):
-        w_0 = 0.9 * params[0]
-        Snow_0 = 0
-        output_df = time_evolution(w_0, P_calibration, R_calibration, Snow_0,
+        output_df = time_evolution(P_calibration, R_calibration,
                                    T_data, lai_data,
                                    *params)
 
@@ -173,6 +138,39 @@ def calibration(P_data, R_data, T_data, lai_data, meas_run, calibration_time,
             print(corr_P)
             correlation_max = corr_P
             best_params = params
-            best_output_df = output_df
+            #best_output_df = output_df
 
-    return best_params, best_output_df
+    return best_params #, best_output_df
+
+def calibration_allcatchments(P_data, R_data, T_data, lai_data, meas_run, calibration_time, parameter_combinations): # add temperature data
+    print('start calibration :)')
+    '''Calibrates the model to the runoff data.
+    P_data: list of precipitation data [m/day]
+    R_data: list of net radiation data [J/day/m**2]
+    meas_run: measured runoff data [mm/day]
+    calibration_time: number of years for calibration [years]
+    parameter_combinations: list of parameter combinations
+    Output: best_params: best parameter combination
+            best_output_df: DataFrame with columns: time, Rn, Pr, calculated_soil_moisture, runoff, evapotranspiration'''
+
+    P_calibration = np.concatenate(P_data[0:calibration_time])
+    R_calibration = np.concatenate(R_data[0:calibration_time])
+    T_calibration = np.concatenate(T_data[0:calibration_time])
+    lai_calibration = np.concatenate(lai_data[0:calibration_time])
+
+    corr = []
+    #corr_df['parameters'] = parameter_combinations
+
+    total_runs = len(parameter_combinations)
+
+    for run_number, params in enumerate(parameter_combinations, start=1):
+        w_0 = 0.9 * params[0]
+        output_df = time_evolution(P_calibration, R_calibration, T_calibration, lai_calibration, *params)
+        corr_P, _ = pearsonr(output_df['runoff'],meas_run['Value'][1:])  
+        corr.append(corr_P)
+        if run_number % 10 == 0:
+            print(f'Run {run_number}/{total_runs} done')
+            print(corr_P)
+    print('calibration done, this was awesome!!')
+    #print(corr)
+    return corr

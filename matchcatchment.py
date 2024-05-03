@@ -7,7 +7,8 @@ from scipy.stats import pearsonr
 import run
 import os
 import tqdm
-
+#Only changes needed
+folder_number = 1
 # define calibration parameter
 cs_values = [210, 420, 840]
 alpha_values = [2, 4, 8]
@@ -22,14 +23,13 @@ parameter_combinations = list(
 years = np.arange(2000,2024,1)
 comb_corr_df = pd.DataFrame(columns=['parameters'])
 comb_corr_df['parameters'] = parameter_combinations
-#grid_data = pd.DataFrame(columns = ['time', 'R', 'P', 'T', 'lon', 'lat'])
 R_data = []
 T_data = []
 P_data = []
 lai_data = []
 calibration_time = [2000,2010]
 file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.2000.nc' # no need to change
-folder_path = 'C:/Users/User/Documents/AppliedLandsurfaceModeling/Folder/' # get right folder path
+folder_path = 'data/catchment_sample/sample_selection_'+str(folder_number)
 
 nc_file = nc.Dataset(file_path)
 lon = nc_file.variables['lon'][:]
@@ -102,7 +102,7 @@ for filename in os.listdir(folder_path):
 print(comb_corr_df)
 
 
-comb_corr_df.to_csv('calibration_results/comb_corr_df.csv', sep=' ', index=False)
+comb_corr_df.to_csv('calibration_results/comb_corr_df'+str(folder_number)+'.csv', sep=' ', index=False)
 
 print(r"""\
 
