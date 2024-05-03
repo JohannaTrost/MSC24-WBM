@@ -13,7 +13,7 @@ beta_values = [0.4, 0.6, 0.8]
 cm_values = [1.5, 2, 2.5]
 et_weights = [(.5, .5), (.25, .75), (.75, .25)]
 # define w_0
-years = np.arange(2000,2018,1) # eigentlich bis 2024
+years = np.arange(2000,2024,1) 
 P_data = []
 R_data = []
 T_data = []
