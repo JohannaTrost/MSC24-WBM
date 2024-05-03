@@ -13,10 +13,11 @@ beta_values = [0.4, 0.6, 0.8]
 cm_values = [1.5, 2, 2.5]
 et_weights = [(.5, .5), (.25, .75), (.75, .25)]
 # define w_0
-years = np.arange(2000,2024,1)
+years = np.arange(2000,2018,1) # eigentlich bis 2024
 P_data = []
 R_data = []
 T_data = []
+lai_data = []
 calibration_time = [2000,2010]
 
 # get radiation and precipitation data from netCDF files
@@ -37,6 +38,13 @@ for year in years:
     nc_file = nc.Dataset(file_path)
     T_data.append(nc_file.variables['t2m'][:,0,0])
     nc_file.close()
+    
+    file_path = 'data/lai/lai.daily.0d50_CentralEurope.'+str(year)+'.nc'
+    nc_file = nc.Dataset(file_path)
+    lai_data.append(nc_file.variables['lai'][:,0,0])
+    nc_file.close()
+
+    
 # get calibration data
 
 # Define the file path
