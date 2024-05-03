@@ -20,11 +20,7 @@ def calc_et_weight(temp, lai, w):
     # Weight Temperature and LAI
     et_coef = temp_w * scaled_data['temp'] + lai_w * scaled_data['lai']
 
-    # Scale between 0 and 1
-    scaler = MinMaxScaler()
-    et_coef_scaled = scaler.fit_transform(np.asarray(et_coef).reshape(-1, 1))
-
-    return et_coef_scaled.flatten()
+    return np.asarray(et_coef)
 
 
 def runoff(wn, Pn, cs, alpha):
@@ -57,6 +53,45 @@ def water_balance(wn, Pn, Rn, Snown, Tn, cs, alpha, beta, gamma, c_m):
     w_next = wn + (Pn - En - Qn)
     w_next = max(0, w_next)
     return Qn, En, w_next, snow
+
+
+def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
+        beta, gamma, c_m, et_weight):
+    """Calculates the time evolution of the soil moisture, runoff and evapotranspiration.
+    Input:  w_0: initial soil moisture [mm]
+            P_data: precipitation data [m/day]
+            R_data: net radiation data [J/day/m**2]
+            Snow_0: initial Snow amount [mm] (equivalent amount of water)
+            T_data: temperature []
+            cs: Soil water holding capacity [mm]
+            alpha: runoff parameter
+            beta: evapotranspiration parameter
+            gamma: evapotranspiration parameter
+            c_m: snow melt parameter [mm/K/day]
+            Output: DataFrame with columns: time, Rn, Pr, calculated_soil_moisture, runoff, evapotranspiration"""
+    conv = 1 / 2260000  # from J/day/m**2 to mm/day
+    R_data = R_data * conv
+    P_data = P_data * 10 ** 3  # from m/day to mm/day
+    output_df = pd.DataFrame(
+        columns=['time', 'R', 'P', 'calculated_soil_moisture', 'runoff',
+                 'evapotranspiration', 'snow', 'Temperature', 'LAI'])
+
+    # Precompute ET parameter
+    et_coefs = beta * calc_et_weight(T_data, lai_data, et_weight)
+
+    for t in range(1, len(P_data) + 1):
+        P = P_data[t - 1]
+        R = R_data[t - 1]
+        T = T_data[t - 1]
+        et_coef = et_coefs[t - 1]
+        lai = lai_data[t - 1]
+        q, e, w, snow = water_balance(w_0, P, R, Snow_0, T, cs, alpha,
+                                      et_coef, gamma, c_m)
+        output_df.loc[t - 1] = t, R, P, w_0, q, e, snow, T, lai
+        w_0 = w
+        Snow_0 = snow
+
+    return output_df
 
 
 def time_evolution(w_0, P_data, R_data, Snow_0, T_data, lai_data, cs, alpha,
