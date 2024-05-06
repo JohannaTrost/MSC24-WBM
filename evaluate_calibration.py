@@ -89,7 +89,7 @@ plt.imshow(calibration_res, cmap=plt.cm.RdBu,  extent=[min_lon, max_lon, min_lat
 plt.plot(mlon, mlat, 'x', color='black')
 plt.colorbar()
 plt.title('Maximum correlation in each catchment')
-plt.savefig('maxcalibration_results.png')
+plt.savefig('figs/maxcalibration_results.png')
 plt.show()
 max_index = np.where(np.sum(all_values, axis=0) == max(np.sum(all_values, axis=0)))[0][0]
 print('cs, alpha, gamma, beta, cm, et')
@@ -111,5 +111,5 @@ norm = mcolors.TwoSlopeNorm(vmin=calibration_res.min(), vcenter=0, vmax = calibr
 plt.imshow(calibration_res, cmap=plt.cm.RdBu,  extent=[min_lon, max_lon, min_lat, max_lat], norm=norm)
 plt.plot(mlon, mlat, 'x', color='black')
 plt.colorbar()
-plt.savefig('optimalcalibration_results.png')
+plt.savefig('figs/optimalcalibration_results.png')
 plt.show()
