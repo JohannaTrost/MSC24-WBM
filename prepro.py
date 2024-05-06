@@ -39,7 +39,7 @@ def load_precip_ncs(save=False):
 
     precip_df['tp'] = np.round([d_year[-1].item() for d_year in data], 10)
 
-    precip_df.head()
+    print(precip_df.head())
 
     # Split df for saving 
     if save:
