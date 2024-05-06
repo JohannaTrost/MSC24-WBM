@@ -10,6 +10,6 @@ Final version of the Simple Waterbalance Model (SWBM) including:
   * missing data for some pixels (water)
  
 Values for 'optimal'/final calibration:
-cs, alpha, gamma, beta, cm, et
-420, 8, 0.2, 0.8, 1.5, (0.75, 0.25)
+* cs, alpha, gamma, beta, cm, et
+* 420, 8, 0.2, 0.8, 1.5, (0.75, 0.25)
 
