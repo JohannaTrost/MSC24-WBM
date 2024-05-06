@@ -11,7 +11,7 @@ os.makedirs('calibration_results', exist_ok=True)
 
 #import tqdm
 #Only changes needed
-folder_number = 10
+folder_number = 9
 # define calibration parameter
 cs_values = [210, 420, 840]
 alpha_values = [2, 4, 8]
