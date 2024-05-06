@@ -61,10 +61,8 @@ for i, file_name in enumerate(file_list):
         max_values.append(max_value)
 coordinates = np.array(coordinates)
 for i in range(len(coordinates[:,0])):
-    print(coordinates[i,0], coordinates[i,1])
     a = np.where(abs(lon-coordinates[i,1]) == min(abs(lon-coordinates[i,1])))[0][0]
     b = np.where(abs(lat-coordinates[i,0]) == min(abs(lat-coordinates[i,0])))[0][0]
-    print(lat[b], lon[a])
     calibration_res[b, a] = max_values[i]
 
 m = Basemap(llcrnrlon=lon.min()-0.25, llcrnrlat=lat.min()-0.25,
@@ -94,9 +92,9 @@ plt.title('Maximum correlation in each catchment')
 plt.savefig('maxcalibration_results.png')
 plt.show()
 max_index = np.where(np.sum(all_values, axis=0) == max(np.sum(all_values, axis=0)))[0][0]
-print(max_index)
+print('cs, alpha, gamma, beta, cm, et')
 print(all_parameters[max_index])
-print(all_values[:,max_index])
+
 calibration_res = np.zeros((len(lon), len(lat)))
 # Plot the calibration results
 for i in range(len(coordinates[:,0])):
@@ -104,7 +102,6 @@ for i in range(len(coordinates[:,0])):
     a = np.where(abs(lon-coordinates[i,1]) == min(abs(lon-coordinates[i,1])))[0][0]
     b = np.where(abs(lat-coordinates[i,0]) == min(abs(lat-coordinates[i,0])))[0][0]
     #print(lat[b], lon[a])
-    print(lat[b]-coordinates[i,0], lon[a]-coordinates[i,1])
     calibration_res[b, a] = all_values[:,max_index][i]
 plt.title(all_parameters[max_index])
 m.drawcoastlines()
