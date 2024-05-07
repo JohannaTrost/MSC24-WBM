@@ -1,6 +1,7 @@
 import numpy as np
 import xarray as xr
 import run
+from scipy.signal import detrend
 
 # Function to run model per gridcell
 def grid_model(P_data, R_data, T_data, lai_data, params, cell = False):
@@ -93,3 +94,27 @@ def grid_model_cell(P_data, R_data, T_data, lai_data, params, cells):
     })
     
     return output_dataset
+
+
+# Remove linear trend without removing mean
+def rem_trend(data):
+    # Convert temperature data to numpy array
+    data_array = data.values
+
+    # Reshape the data into 2D array (time, flattened spatial dimensions)
+    time_length = len(data.time)
+    spatial_dims = data.shape[1:]
+    data_2d = data_array.reshape((time_length, -1))
+
+    # Detrend the data to remove the linear trend
+    detrended_data = detrend(data_2d, axis=0, type='linear')
+    
+    # Calculate the mean of the original data
+    mean_data = np.mean(data_2d, axis=0)
+    
+    # Add back the mean to the detrended data
+    detrended_data_with_mean = detrended_data + mean_data
+
+    # Reshape detrended data back to its original shape
+    output = xr.DataArray(detrended_data_with_mean.reshape((time_length,) + spatial_dims),
+                                            coords=data.coords, dims=data.dims)
