@@ -1,38 +1,8 @@
-import os
-
-import numpy as np
-import pandas as pd
-from matplotlib import pyplot as plt
-from tqdm import tqdm
-
-from prepro import split_dataset
+from prepro import *
 
 P_data1 = pd.read_csv('data/total_precipitation/precip_2000_2011.csv')
 P_data2 = pd.read_csv('data/total_precipitation/precip_2012_2023.csv')
 P_data = pd.concat([P_data1, P_data2])
-
-
-def adjust_precipitation(precip, scale_factor=2, cutoff=1e-05):
-    # Step 1: Scale the data to double its variability
-    scaled_precip = precip * scale_factor
-
-    # Step 2: Adjust for negativity
-    adjusted_precip = np.where(scaled_precip < 0, 0, scaled_precip)
-    adjusted_mean = adjusted_precip.mean()
-
-    # Step 3: Iterative Offset Adjustment
-    while np.abs(adjusted_mean - precip.mean()) > cutoff:
-        offset = precip.mean() - adjusted_mean
-        adjusted_precip += offset
-        adjusted_precip = np.where(adjusted_precip < 0, 0, adjusted_precip)
-        adjusted_mean = adjusted_precip.mean()
-
-    # Step 4: Final Adjustment
-    if (adjusted_precip < 0).any():
-        min_value = adjusted_precip.min()
-        adjusted_precip -= min_value
-
-    return adjusted_precip
 
 
 cutoff = 1e-05

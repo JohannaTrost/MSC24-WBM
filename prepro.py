@@ -1,10 +1,32 @@
 import os
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
 import netCDF4 as nc
 from datetime import datetime
 from tqdm import tqdm
+
+
+def adjust_precipitation(precip, scale_factor=2, cutoff=1e-05):
+    # Step 1: Scale the data to double its variability
+    scaled_precip = precip * scale_factor
+
+    # Step 2: Adjust for negativity
+    adjusted_precip = np.where(scaled_precip < 0, 0, scaled_precip)
+    adjusted_mean = adjusted_precip.mean()
+
+    # Step 3: Iterative Offset Adjustment
+    while np.abs(adjusted_mean - precip.mean()) > cutoff:
+        offset = precip.mean() - adjusted_mean
+        adjusted_precip += offset
+        adjusted_precip = np.where(adjusted_precip < 0, 0, adjusted_precip)
+        adjusted_mean = adjusted_precip.mean()
+
+    # Step 4: Final Adjustment
+    if (adjusted_precip < 0).any():
+        min_value = adjusted_precip.min()
+        adjusted_precip -= min_value
+
+    return adjusted_precip
 
 
 def split_dataset(data, save=False, path=''):
@@ -35,7 +57,8 @@ def split_dataset(data, save=False, path=''):
 
 
 def load_precip_ncs(save=False):
-    """Load nc file for all years (2000-2023) and merge them into one pandas dataframe"""
+    """Load nc file for all years (2000-2023) and merge them into one pandas
+    dataframe """
     years = np.arange(2000, 2023, 1)
 
     # Flatten the data
