@@ -118,3 +118,5 @@ def rem_trend(data):
     # Reshape detrended data back to its original shape
     output = xr.DataArray(detrended_data_with_mean.reshape((time_length,) + spatial_dims),
                                             coords=data.coords, dims=data.dims)
+    
+    return output
