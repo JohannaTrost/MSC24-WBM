@@ -1,4 +1,5 @@
 from prepro import *
+from matplotlib import pylab as plt
 
 P_data1 = pd.read_csv('data/total_precipitation/precip_2000_2011.csv')
 P_data2 = pd.read_csv('data/total_precipitation/precip_2012_2023.csv')
