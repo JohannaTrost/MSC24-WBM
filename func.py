@@ -2,6 +2,7 @@ import numpy as np
 import xarray as xr
 import run
 from scipy.signal import detrend
+from matplotlib import pyplot as plt
 
 # Function to run model per gridcell
 def grid_model(P_data, R_data, T_data, lai_data, params, cell = False):
@@ -120,3 +121,28 @@ def rem_trend(data):
                                             coords=data.coords, dims=data.dims)
     
     return output
+
+
+# Plot function
+def plot_func(data, grid,source):
+    fig, axs = plt.subplots(2, 2, figsize=(10, 8))
+
+    # Plotting the first subplot
+    data[source].isel(lat=grid[0][0], lon=grid[0][1]).plot(x='time', ax=axs[0, 0])
+    axs[0, 0]
+
+    # Plotting the second subplot
+    data[source].isel(lat=grid[1][0], lon=grid[1][1]).plot(x='time', ax=axs[0, 1])
+    axs[0, 1]
+
+    # Plotting the third subplot
+    data[source].isel(lat=grid[2][0], lon=grid[2][1]).plot(x='time', ax=axs[1, 0])
+    axs[1, 0]
+
+    # Plotting the fourth subplot
+    data[source].isel(lat=grid[3][0], lon=grid[3][1]).plot(x='time', ax=axs[1, 1])
+    axs[1, 1]
+
+    plt.tight_layout()
+    plt.subplots_adjust(wspace=0.3, hspace=0.4)
+    plt.show()
