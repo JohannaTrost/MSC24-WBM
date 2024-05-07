@@ -74,6 +74,7 @@ def grid_model_cell(P_data, R_data, T_data, lai_data, params, cells):
         soil_moisture[:, i[0], i[1]] = daily_output['calculated_soil_moisture'].values
         evapotranspiration[:, i[0], i[1]] = daily_output['evapotranspiration'].values
         runoff[:, i[0], i[1]] = daily_output['runoff'].values
+        print(i, "done")
     
     
     # Convert arrays to xarrays with corresponding latitudes and longitudes
