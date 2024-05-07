@@ -3,6 +3,13 @@ import xarray as xr
 import run
 from scipy.signal import detrend
 from matplotlib import pyplot as plt
+import rioxarray
+import pyproj
+import geopandas as gpd
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+from scipy.interpolate import griddata
+import pandas as pd
 
 # Function to run model per gridcell
 def grid_model(P_data, R_data, T_data, lai_data, params, cell = False):
@@ -146,3 +153,98 @@ def plot_func(data, grid,source):
     plt.tight_layout()
     plt.subplots_adjust(wspace=0.3, hspace=0.4)
     plt.show()
+
+
+
+# function to clip and interpolation projections data
+def clip_proj(forcing_data, proj_data):
+    
+    min_lon = forcing_data.lon.min().values - 0.5
+    min_lat = forcing_data.lat.min().values - 0.5
+    max_lon = forcing_data.lon.max().values + 0.5
+    max_lat = forcing_data.lat.max().values + 0.5
+    
+    proj_data = proj_data.rio.write_crs('epsg:4326')
+
+    # Clip the projection data
+    proj_data_clipped = proj_data.rio.clip_box(minx=min_lon, miny=min_lat, maxx=max_lon, maxy=max_lat)
+    
+    # Rename dimensions to match the forcing data
+    proj_data_interp = proj_data_clipped.rename({'x': 'lon', 'y': 'lat'})
+    
+    # Interpolate onto the grid of forcing data
+    proj_data_interp = proj_data_interp.interp(
+        lon=forcing_data.lon,
+        lat=forcing_data.lat,
+        method='linear'
+    )
+    
+    return proj_data_clipped, proj_data_interp
+
+
+
+# function to test wether interpolation worked
+def plot_proj_data(proj_data_interp, proj_data_clipped, world):
+
+    extent_proj_interp = [
+        proj_data_interp.lon.min(),
+        proj_data_interp.lon.max(),
+        proj_data_interp.lat.min(),
+        proj_data_interp.lat.max()
+    ]
+    
+    extent_proj_clipped = [
+        proj_data_clipped.x.min(),
+        proj_data_clipped.x.max(),
+        proj_data_clipped.y.min(),
+        proj_data_clipped.y.max()
+    ]
+
+    # Create a new figure and axes
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(20, 6), subplot_kw={'projection': ccrs.PlateCarree()})
+
+    # Plot the raster data and country boundaries for proj_data_interp
+    proj_data_interp.max(dim='time').plot(ax=ax1, cmap='coolwarm')
+    world.boundary.plot(ax=ax1, linewidth=1.5, color='black')
+    ax1.set_extent(extent_proj_interp)
+    ax1.set_title('Max Temperature Proj Data Interpolated')
+    ax1.set_xlabel('Longitude')
+    ax1.set_ylabel('Latitude')
+    ax1.coastlines()
+    ax1.gridlines()
+
+    # Plot the raster data and country boundaries for proj_data_clipped
+    proj_data_clipped.max(dim='time').plot(ax=ax2, cmap='coolwarm')
+    world.boundary.plot(ax=ax2, linewidth=1.5, color='black')
+    ax2.set_extent(extent_proj_clipped)
+    ax2.set_title('Max Temperature Proj Data Clipped')
+    ax2.set_xlabel('Longitude')
+    ax2.set_ylabel('Latitude')
+    ax2.coastlines()
+    ax2.gridlines()
+
+    # Show the plot
+    plt.show()
+
+
+# temporal offest function
+def correct_temporal_bias(proj_data, ref_data):
+    
+    proj_data_current = proj_data.sel(time=slice('2000', '2023'))
+
+    # Calculate the mean for the selected time period
+    mean_proj_data_current = proj_data_current.mean(dim='time')
+    mean_ref_data = ref_data.mean(dim='time')
+
+    # Calculate the mean difference
+    mean_difference = mean_proj_data_current - mean_ref_data
+
+    # Calculate the mean difference over all pixels
+    mean_difference_overall = mean_difference.mean().values
+
+    print("Mean Difference Over All Pixels:", mean_difference_overall)
+
+    # Subtract the mean difference from the entire time series
+    proj_data_corrected = proj_data - mean_difference_overall
+
+    return proj_data_corrected
