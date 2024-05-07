@@ -49,3 +49,46 @@ def grid_model(P_data, R_data, T_data, lai_data, params, cell = False):
     })
     
     return output_dataset
+
+
+# Function to only calculate certain gridcells
+def grid_model_cell(P_data, R_data, T_data, lai_data, params, cells):
+    # Create empty arrays to store the output data
+    snow = np.zeros_like(P_data)
+    soil_moisture = np.zeros_like(P_data)
+    evapotranspiration = np.zeros_like(P_data)
+    runoff = np.zeros_like(P_data)
+    for i in cells:
+        if np.isnan(lai_data[:, i[0], i[1]]).all():
+            print("Removed grid cell:", i[0], i[1])
+            continue
+        R_data_grid = R_data[:, i[0], i[1]]
+        P_data_grid = P_data[:, i[0], i[1]]
+        T_data_grid = T_data[:, i[0], i[1]]
+        lai_data_grid = lai_data[:, i[0], i[1]]
+
+        # Run Model for daily values
+        daily_output = run.time_evolution(P_data_grid, R_data_grid, T_data_grid, lai_data_grid, *params)
+
+        snow[:, i[0], i[1]] = daily_output['snow'].values
+        soil_moisture[:, i[0], i[1]] = daily_output['calculated_soil_moisture'].values
+        evapotranspiration[:, i[0], i[1]] = daily_output['evapotranspiration'].values
+        runoff[:, i[0], i[1]] = daily_output['runoff'].values
+    
+    
+    # Convert arrays to xarrays with corresponding latitudes and longitudes
+    snow_xr = xr.DataArray(snow, dims=('time', 'lat', 'lon'), coords={'time': P_data.time, 'lat': P_data.lat, 'lon': P_data.lon})
+    soil_moisture_xr = xr.DataArray(soil_moisture, dims=('time', 'lat', 'lon'), coords={'time': P_data.time, 'lat': P_data.lat, 'lon': P_data.lon})
+    evapotranspiration_xr = xr.DataArray(evapotranspiration, dims=('time', 'lat', 'lon'), coords={'time': P_data.time, 'lat': P_data.lat, 'lon': P_data.lon})
+    runoff_xr = xr.DataArray(runoff, dims=('time', 'lat', 'lon'), coords={'time': P_data.time, 'lat': P_data.lat, 'lon': P_data.lon})
+
+
+    # Merge DataArrays into a Dataset
+    output_dataset = xr.Dataset({
+        'snow': snow_xr,
+        'soil_moisture': soil_moisture_xr,
+        'evapotranspiration': evapotranspiration_xr,
+        'runoff': runoff_xr
+    })
+    
+    return output_dataset
