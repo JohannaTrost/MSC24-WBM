@@ -248,3 +248,43 @@ def correct_temporal_bias(proj_data, ref_data):
     proj_data_corrected = proj_data - mean_difference_overall
 
     return proj_data_corrected
+
+def create_daily_timesteps(future_data):
+    # Create a new time range from January 1, 2000, to December 31, 2100, with monthly frequency
+    new_time_range = pd.date_range(start='2000-01-01', end='2100-12-31', freq='M')
+    
+    # Add the new time range to the future dataset
+    future_data['time'] = new_time_range
+    
+    # Convert the time to a pandas DatetimeIndex
+    time_index = pd.to_datetime(future_data.time.values)
+    
+    # Calculate the number of days in each month
+    days_in_month = pd.DatetimeIndex(time_index).days_in_month
+    
+    # Initialize an empty list to store daily dates
+    daily_dates = []
+    
+    # Iterate through each month and generate daily dates
+    for idx, num_days in enumerate(days_in_month):
+        # Get the start date of the month
+        start_date = time_index[idx] - pd.offsets.MonthBegin(1)
+        # For the first month, start from the first day of January
+        if idx == 0:
+            start_date = start_date.replace(day=1)
+        # Create daily DateTimeIndex for the month
+        month_dates = pd.date_range(start=start_date, periods=num_days, freq='D')
+        # Append to the list of daily dates
+        daily_dates.extend(month_dates)
+    
+    # Convert the list of daily dates to a DatetimeIndex
+    daily_dates_index = pd.DatetimeIndex(daily_dates)
+    
+    # Repeat the future data for each day of the month
+    future_data_daily = np.repeat(future_data, days_in_month, axis=0)
+    
+    # Add the daily dates index to the future data
+    future_data_daily['time'] = daily_dates_index
+    
+    return future_data_daily
+
