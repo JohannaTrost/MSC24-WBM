@@ -3,7 +3,7 @@ import xarray as xr
 import run
 from scipy.signal import detrend
 from matplotlib import pyplot as plt
-import rioxarray
+#import rioxarray
 import pyproj
 import geopandas as gpd
 import cartopy.crs as ccrs
@@ -14,10 +14,10 @@ import pandas as pd
 # Function to run model per gridcell
 def grid_model(P_data, R_data, T_data, lai_data, params, cell = False):
     # Create empty arrays to store the output data
-    snow = np.zeros_like(P_data)
-    soil_moisture = np.zeros_like(P_data)
-    evapotranspiration = np.zeros_like(P_data)
-    runoff = np.zeros_like(P_data)
+    snow = np.full_like(P_data, np.nan)
+    soil_moisture = np.full_like(P_data, np.nan)
+    evapotranspiration = np.full_like(P_data, np.nan)
+    runoff = np.full_like(P_data, np.nan)
     for lat in range(len(P_data.lat)):
         for lon in range(len(P_data.lon)):
 
@@ -63,10 +63,10 @@ def grid_model(P_data, R_data, T_data, lai_data, params, cell = False):
 # Function to only calculate certain gridcells
 def grid_model_cell(P_data, R_data, T_data, lai_data, params, cells):
     # Create empty arrays to store the output data
-    snow = np.zeros_like(P_data)
-    soil_moisture = np.zeros_like(P_data)
-    evapotranspiration = np.zeros_like(P_data)
-    runoff = np.zeros_like(P_data)
+    snow = np.full_like(P_data, np.nan)
+    soil_moisture = np.full_like(P_data, np.nan)
+    evapotranspiration = np.full_like(P_data, np.nan)
+    runoff = np.full_like(P_data, np.nan)
     for i in cells:
         if np.isnan(lai_data[:, i[0], i[1]]).all():
             print("Removed grid cell:", i[0], i[1])
