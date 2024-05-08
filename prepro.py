@@ -4,6 +4,68 @@ import numpy as np
 import netCDF4 as nc
 from datetime import datetime
 from tqdm import tqdm
+import xarray as xr
+
+
+def load_data():
+    # Read in forcing data
+    years = np.arange(2000, 2024, 1)
+    P_data = []
+    R_data = []
+    T_data = []
+    lai_data = []
+    calibration_time = [2000, 2010]
+
+    for year in years:
+        file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.' + str(
+            year) + '.nc'
+        P_data.append(xr.open_dataset(file_path)['tp'])
+
+        file_path = 'data/net_radiation/nr.daily.calc.era5.0d50_CentralEurope.' + str(
+            year) + '.nc'
+        R_data.append(xr.open_dataset(file_path)['nr'])
+
+        file_path = 'data/daily_average_temperature/t2m_mean.daily.calc.era5.0d50_CentralEurope.' + str(
+            year) + '.nc'
+        T_data.append(xr.open_dataset(file_path)['t2m'])
+
+        file_path = 'data/lai/lai.daily.0d50_CentralEurope.' + str(year) + '.nc'
+        lai_data.append(xr.open_dataset(file_path)['lai'])
+
+    # Convert lists to xarray datasets
+    P_data = xr.concat(P_data, dim='time')
+    R_data = xr.concat(R_data, dim='time')
+    T_data = xr.concat(T_data, dim='time')
+    lai_data = xr.concat(lai_data, dim='time')
+
+    return P_data, R_data, T_data, lai_data
+
+
+def fill_missing_lai(lai_data):
+    gridcells = []
+    for lat in range(len(lai_data.latitude)):
+        for lon in range(len(lai_data.longitude)):
+            if np.isnan(lai_data[:, lat, lon]).all():
+                gridcells.append((lat, lon))
+
+    for lat in range(len(lai_data.latitude)):
+        for lon in range(len(lai_data.longitude)):
+            if np.isnan(lai_data[:, lat, lon]).all():
+                continue
+            else:
+                # Get the data for the current grid cell
+                grid_cell_data = lai_data[:, lat, lon]
+
+                # Convert to DataFrame for easier handling
+                grid_cell_df = pd.DataFrame(grid_cell_data)
+
+                # Fill NA values with the previous value
+                grid_cell_df.fillna(method='ffill', inplace=True)
+
+                # Update the grid cell data
+                lai_data[:, lat, lon] = grid_cell_df.values.flatten()
+
+    return lai_data
 
 
 def adjust_precipitation(precip, scale_factor=2, cutoff=1e-05):
