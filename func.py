@@ -131,23 +131,23 @@ def rem_trend(data):
 
 
 # Plot function
-def plot_func(data, grid,source):
+def plot_func(data, grid):
     fig, axs = plt.subplots(2, 2, figsize=(10, 8))
 
     # Plotting the first subplot
-    data[source].isel(lat=grid[0][0], lon=grid[0][1]).plot(x='time', ax=axs[0, 0])
+    data.isel(lat=grid[0][0], lon=grid[0][1]).plot(x='time', ax=axs[0, 0])
     axs[0, 0]
 
     # Plotting the second subplot
-    data[source].isel(lat=grid[1][0], lon=grid[1][1]).plot(x='time', ax=axs[0, 1])
+    data.isel(lat=grid[1][0], lon=grid[1][1]).plot(x='time', ax=axs[0, 1])
     axs[0, 1]
 
     # Plotting the third subplot
-    data[source].isel(lat=grid[2][0], lon=grid[2][1]).plot(x='time', ax=axs[1, 0])
+    data.isel(lat=grid[2][0], lon=grid[2][1]).plot(x='time', ax=axs[1, 0])
     axs[1, 0]
 
     # Plotting the fourth subplot
-    data[source].isel(lat=grid[3][0], lon=grid[3][1]).plot(x='time', ax=axs[1, 1])
+    data.isel(lat=grid[3][0], lon=grid[3][1]).plot(x='time', ax=axs[1, 1])
     axs[1, 1]
 
     plt.tight_layout()
