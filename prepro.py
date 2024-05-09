@@ -7,14 +7,13 @@ from tqdm import tqdm
 import xarray as xr
 
 
-def load_data():
+def load_data(start_year=2000, end_year=2024):
     # Read in forcing data
-    years = np.arange(2000, 2024, 1)
+    years = np.arange(start_year, end_year, 1)
     P_data = []
     R_data = []
     T_data = []
     lai_data = []
-    calibration_time = [2000, 2010]
 
     for year in years:
         file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.' + str(
@@ -99,8 +98,7 @@ def split_dataset(data, save=False, path=''):
     # Split time series
     df_2000_to_2011 = data[(data['date'].dt.year >= 2000) & (
             data['date'].dt.year <= 2011)]
-    df_2012_to_2023 = data[(data['date'].dt.year >= 2012) & (
-            data['date'].dt.year <= 2023)]
+    df_2012_to_2023 = data[(data['date'].dt.year >= 2012)]
 
     if save:
         # Print the first few rows of each DataFrame to verify
@@ -118,10 +116,10 @@ def split_dataset(data, save=False, path=''):
     return df_2000_to_2011, df_2012_to_2023
 
 
-def load_precip_ncs(save=False):
+def load_precip_ncs(save=False, start_year=2000, end_year=2024):
     """Load nc file for all years (2000-2023) and merge them into one pandas
     dataframe """
-    years = np.arange(2000, 2023, 1)
+    years = np.arange(start_year, end_year)
 
     # Flatten the data
     data = []
@@ -155,9 +153,6 @@ def load_precip_ncs(save=False):
     print(precip_df.head())
 
     # Split df for saving 
-    df_2000_to_2011, df_2012_to_2023 = split_dataset(precip_df,
-                                                     save=save,
-                                                     path='data/'
-                                                          'total_precipitation')
+    split_dataset(precip_df, save=save, path='data/total_precipitation')
 
     return precip_df

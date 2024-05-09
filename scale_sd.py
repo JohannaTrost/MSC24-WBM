@@ -5,7 +5,6 @@ P_data1 = pd.read_csv('data/total_precipitation/precip_2000_2011.csv')
 P_data2 = pd.read_csv('data/total_precipitation/precip_2012_2023.csv')
 P_data = pd.concat([P_data1, P_data2])
 
-
 cutoff = 1e-05
 
 # Scale precipitation standard deviation
@@ -71,6 +70,6 @@ df_2000_to_2011_half, df_2012_to_2023_half = split_dataset(
     P_data_half_sd.reset_index())
 
 df_2000_to_2011_doubled.to_csv(f'{path}/precip_dbl_2000_2011.csv', index=False)
-df_2000_to_2011_doubled.to_csv(f'{path}/precip_dbl_2012_2023.csv', index=False)
+df_2012_to_2023_doubled.to_csv(f'{path}/precip_dbl_2012_2023.csv', index=False)
 df_2000_to_2011_half.to_csv(f'{path}/precip_half_2000_2011.csv', index=False)
 df_2012_to_2023_half.to_csv(f'{path}/precip_half_2012_2023.csv', index=False)

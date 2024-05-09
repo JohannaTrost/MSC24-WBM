@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+import os
 import numpy as np
 import pandas as pd
 import netCDF4 as nc
@@ -6,6 +6,7 @@ import itertools
 from scipy.stats import pearsonr
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from tqdm import tqdm
+import xarray as xr
 
 
 def calc_et_weight(temp, lai, w):
@@ -97,8 +98,38 @@ def water_balance(wn, Pn, Rn, Snown, Tn, cs, alpha, beta, gamma, c_m):
     return Qn, En, w_next, snow
 
 
-def time_evolution(full_data, cs, alpha,
-        gamma, beta, c_m, et_weight):
+def out2xarray(output, start_year=2000, end_year=2024):
+    output = np.moveaxis(output, 2, 0)  # move time axis to be first axis
+
+    # get dates and coordinates
+    precip_path = 'data/total_precipitation'
+    times = []
+    for year in np.arange(start_year, end_year):
+        path = f'{precip_path}/tp.daily.calc.era5.0d50_CentralEurope.{year}.nc'
+        nc_file = nc.Dataset(path)
+        times.append(nc_file.variables['time'][:].data)
+        nc_file.close()
+    times = np.concatenate(times)
+    nc_file = nc.Dataset(path)
+    lons = nc_file.variables['lon'][:].data
+    lats = nc_file.variables['lat'][:].data
+    nc_file.close()
+
+    out_dict = {}
+    for i, out_name in enumerate(['runoff',
+                                  'evapotranspiration',
+                                  'soil_moisture',
+                                  'snow']):
+        out_xr = xr.DataArray(output[:, :, :, i], dims=('time', 'lat', 'lon'),
+                              coords={'time': times,
+                                      'lat': lats,
+                                      'lon': lons})
+        out_dict[out_name] = out_xr
+
+    return xr.Dataset(out_dict)
+
+
+def time_evolution(full_data, cs, alpha, gamma, beta, c_m, et_weight):
     """Calculates the time evolution of the soil moisture, runoff and evapotranspiration.
     Input:  w_0: initial soil moisture [mm]
             P_data: precipitation data [m/day]
