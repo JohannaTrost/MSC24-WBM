@@ -1,6 +1,7 @@
 from run_ac import *
 import os
 from tqdm import tqdm
+import pandas as pd
 
 years = np.arange(2000, 2024, 1)
 params = [420, 8, 0.2, 0.8, 1.5, (0.75, 0.25)]

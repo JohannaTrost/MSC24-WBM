@@ -16,11 +16,3 @@ def extract_values(output):
 
     return extracted_values
 
-
-def date_range(start, end):
-    start_date = datetime.strptime(start, '%Y-%m-%d').date()
-    end_date = datetime.strptime(end, '%Y-%m-%d').date()
-    delta = end_date - start_date
-    days = [start_date + timedelta(days=i) for i in
-            range(delta.days + 1)]
-    return list(map(lambda n: n.strftime("%Y-%m-%d"), days))
