@@ -1,19 +1,23 @@
 import numpy as np
 import netCDF4 as nc
 import itertools
+
+import pandas as pd
 from scipy.stats import pearsonr
 from tqdm import tqdm
 import xarray as xr
-from datetime import datetime, timedelta
 
 
 def date_range(start, end):
-    start_date = datetime.strptime(start, '%Y-%m-%d').date()
-    end_date = datetime.strptime(end, '%Y-%m-%d').date()
-    delta = end_date - start_date
-    days = [start_date + timedelta(days=i) for i in
-            range(delta.days + 1)]
-    return list(map(lambda n: n.strftime("%Y-%m-%d"), days))
+    # Convert start and end dates to datetime64[ns] objects
+    start_date = np.datetime64(start)
+    end_date = np.datetime64(end)
+
+    # Generate the date range as datetime64[ns] objects
+    date_range = np.arange(start_date, end_date + np.timedelta64(1, 'D'),
+                           dtype='datetime64[D]')
+
+    return pd.to_datetime(date_range)
 
 
 def calc_et_weight(temp, lai, w):
