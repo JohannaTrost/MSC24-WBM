@@ -7,6 +7,16 @@ from scipy.stats import pearsonr
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from tqdm import tqdm
 import xarray as xr
+from datetime import datetime, timedelta
+
+
+def date_range(start, end):
+    start_date = datetime.strptime(start, '%Y-%m-%d').date()
+    end_date = datetime.strptime(end, '%Y-%m-%d').date()
+    delta = end_date - start_date
+    days = [start_date + timedelta(days=i) for i in
+            range(delta.days + 1)]
+    return list(map(lambda n: n.strftime("%Y-%m-%d"), days))
 
 
 def calc_et_weight(temp, lai, w):
@@ -102,15 +112,8 @@ def out2xarray(output, start_year=2000, end_year=2024):
     output = np.moveaxis(output, 2, 0)  # move time axis to be first axis
 
     # get dates and coordinates
-    precip_path = 'data/total_precipitation'
-    times = []
-    for year in np.arange(start_year, end_year):
-        path = f'{precip_path}/tp.daily.calc.era5.0d50_CentralEurope.{year}.nc'
-        nc_file = nc.Dataset(path)
-        times.append(nc_file.variables['time'][:].data)
-        nc_file.close()
-    times = np.concatenate(times)
-    nc_file = nc.Dataset(path)
+    times = date_range('2000-01-01', '2023-12-31')
+    nc_file = nc.Dataset(f'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.2005.nc')
     lons = nc_file.variables['lon'][:].data
     lats = nc_file.variables['lat'][:].data
     nc_file.close()
