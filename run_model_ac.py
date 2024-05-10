@@ -1,6 +1,7 @@
 from run_ac import *
 import os
 from tqdm import tqdm
+import time
 
 years = np.arange(2000, 2024, 1)
 params = [420, 8, 0.2, 0.8, 1.5, (0.75, 0.25)]
@@ -50,42 +51,10 @@ for i, lat in enumerate(latitude_values):
 results = time_evolution(full_data, *params)  # q, e, w, snow
 res_xr_ds = out2xarray(results)
 
-# --- Run model with scaled precipiptation variability
-
-# Get timestamps and coordinates from original data
-precip_path = 'data/total_precipitation'
-nc_file = nc.Dataset(
-    f'{precip_path}/tp.daily.calc.era5.0d50_CentralEurope.2005.nc')
-lons = nc_file.variables['lon'][:].data
-lats = nc_file.variables['lat'][:].data
-nc_file.close()
-
-scaled_path = 'data/total_precipitation/preprocessed'
-for scale in ['dbl', 'half']:
-    # Load scaled data
-    precip_2000_2011 = pd.read_csv(f'{scaled_path}/precip_{scale}_2000_2011.csv')
-    precip_2012_2023 = pd.read_csv(f'{scaled_path}/precip_{scale}_2012_2023.csv')
-    precip = pd.concat((precip_2000_2011, precip_2012_2023)).reset_index()
-
-    # Put loaded scaled data into an arr
-    precip_arr = np.ones_like(full_data[:, :, :, 0]) * -1
-    for i, lat in enumerate(lats):
-        for j, lon in enumerate(lons):
-            precip_arr[i, j, :] = precip[(precip['lat'] == lat) &
-                                         (precip['lon'] == lon)]['tp'].values
-
-    full_data_scaled = full_data.copy()
-    full_data_scaled[:, :, :, 0] = precip_arr
-
-    results_scaled = time_evolution(full_data_scaled, *params)
-    res_xr_ds = out2xarray(results_scaled)
-
-    # Save results
-    out_path = f'results/{scale}_precip_output'
-    os.makedirs(out_path, exist_ok=True)
-    for out in ['runoff', 'evapotranspiration', 'soil_moisture', 'snow']:
-        res_xr_ds[out].to_netcdf(f'{out_path}/{out}.nc')
-
-
+# Save results
+out_path = f'results/model_output_{time.time()}'
+os.makedirs(out_path, exist_ok=True)
+for out in ['runoff', 'evapotranspiration', 'soil_moisture', 'snow']:
+    res_xr_ds[out].to_netcdf(f'{out_path}/{out}.nc')
 
 
