@@ -116,43 +116,54 @@ def split_dataset(data, save=False, path=''):
     return df_2000_to_2011, df_2012_to_2023
 
 
-def load_precip_ncs(save=False, start_year=2000, end_year=2024):
+def load_ncs2df(path='data/total_precipitation/tp.daily.calc.era5'
+                     '.0d50_CentralEurope.',
+                save=False,
+                start_year=2000,
+                end_year=2024):
     """Load nc file for all years (2000-2023) and merge them into one pandas
     dataframe """
     years = np.arange(start_year, end_year)
 
+    nc_file = nc.Dataset(path + '2000.nc')
+    if 'lon' in list(nc_file.variables.keys()):
+        lon_str, lat_str = 'lon', 'lat'
+    else:
+        lon_str, lat_str = 'longitude', 'latitude'
+
+    key = list(nc_file.variables.keys())[-1]
+    nc_file.close()
+
     # Flatten the data
     data = []
-
     for year in tqdm(years):
 
-        file_path = 'data/total_precipitation/tp.daily.calc.era5.0d50_CentralEurope.' + str(
-            year) + '.nc'
+        file_path = path + str(year) + '.nc'
 
         nc_file = nc.Dataset(file_path)
-        lon = nc_file.variables['lon'][:]
-        lat = nc_file.variables['lat'][:]
+        lon = nc_file.variables[lon_str][:]
+        lat = nc_file.variables[lat_str][:]
         dates = nc_file.variables['time'][:]
 
         for i, date in enumerate(dates):
             for j in range(len(lat)):
                 for k in range(len(lon)):
-                    tp = nc_file.variables['tp'][i, j, k]
+                    data_ijk = nc_file.variables[key][i, j, k]
                     # Convert day of the year to a timestamp
                     year_start = datetime(year, 1, 1)
                     timestamp = year_start + pd.Timedelta(days=int(date))
-                    data.append([timestamp, lat[j], lon[k], tp])
+                    data.append([timestamp, lat[j], lon[k], data_ijk])
 
         nc_file.close()
 
     # Create DataFrame
-    precip_df = pd.DataFrame(data, columns=['date', 'lat', 'lon', 'tp'])
+    precip_df = pd.DataFrame(data, columns=['date', 'lat', 'lon', key])
 
-    precip_df['tp'] = np.round([d_year[-1].item() for d_year in data], 10)
+    precip_df[key] = np.round([d_year[-1].item() for d_year in data], 10)
 
     print(precip_df.head())
 
     # Split df for saving 
-    split_dataset(precip_df, save=save, path='data/total_precipitation')
+    #_, _ = split_dataset(precip_df, save=save, path='data/total_precipitation')
 
     return precip_df
