@@ -288,3 +288,8 @@ def create_daily_timesteps(future_data):
     
     return future_data_daily
 
+def add_daily_variation(temp):
+    month = temp.time.dt.month
+    std_month = std_dev.sel(month=month)
+    variation = np.random.normal(0, std_month, size=temp.shape)
+    return temp + variation
