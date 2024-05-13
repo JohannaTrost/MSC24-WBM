@@ -181,8 +181,6 @@ def clip_proj(forcing_data, proj_data):
     
     return proj_data_clipped, proj_data_interp
 
-
-
 # function to test wether interpolation worked
 def plot_proj_data(proj_data_interp, proj_data_clipped, world):
 
