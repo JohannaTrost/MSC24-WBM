@@ -9,10 +9,10 @@ Final version of the Simple Waterbalance Model (SWBM) including:
   * for the last 5 years we repeat the last 5 existig years
   * missing data for some pixels (water)
 
-To do:
+To do: <br>
 Trends
 * normalize variables to show trends in % changes
-* test what happens when we only use detrended temperature or radiation --> which one has the higher influence?
+* test what happens when we only use detrended temperature or radiation --> which one has the higher influence? <br>
 CMIP6
 * check precipitation unit (convert kg/km2/s to m/day)
 Other things
