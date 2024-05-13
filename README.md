@@ -13,8 +13,10 @@ To do: <br>
 Trends
 * normalize variables to show trends in % changes
 * test what happens when we only use detrended temperature or radiation --> which one has the higher influence? <br>
+
 CMIP6
-* check precipitation unit (convert kg/km2/s to m/day)
+* check precipitation unit (convert kg/km2/s to m/day) <br>
+
 Other things
 * test what happens when we take out the daily variation within one month in the forcing data
 
