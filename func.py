@@ -288,6 +288,16 @@ def create_daily_timesteps(future_data):
     
     return future_data_daily
 
+def date_range(start, end):
+    # Convert start and end dates to datetime64[ns] objects
+    start_date = np.datetime64(start)
+    end_date = np.datetime64(end)
+
+    # Generate the date range as datetime64[ns] objects
+    date_range = np.arange(start_date, end_date + np.timedelta64(1, 'D'),
+                           dtype='datetime64[D]')
+
+    return pd.to_datetime(date_range)
 
 def out2xarray2(output, reference):
     output = np.moveaxis(output, 2, 0)  # move time axis to be first axis
