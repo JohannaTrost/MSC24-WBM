@@ -132,6 +132,26 @@ def out2xarray(output, start_year=2000, end_year=2024):
 
     return xr.Dataset(out_dict)
 
+def out2xarray2(output, reference):
+    output = np.moveaxis(output, 2, 0)  # move time axis to be first axis
+
+    # get dates and coordinates
+    times = date_range('2024-01-01', '2100-12-31')
+    lons = reference.lon.values
+    lats = reference.lat.values
+    
+    out_dict = {}
+    for i, out_name in enumerate(['runoff',
+                                  'evapotranspiration',
+                                  'soil_moisture',
+                                  'snow']):
+        out_xr = xr.DataArray(output[:, :, :, i], dims=('time', 'lat', 'lon'),
+                              coords={'time': times,
+                                      'lat': lats,
+                                      'lon': lons})
+        out_dict[out_name] = out_xr
+
+    return xr.Dataset(out_dict)
 
 def time_evolution(full_data, cs, alpha, gamma, beta, c_m, et_weight):
     """Calculates the time evolution of the soil moisture, runoff and evapotranspiration.
