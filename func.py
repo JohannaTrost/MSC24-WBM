@@ -10,6 +10,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from scipy.interpolate import griddata
 import pandas as pd
+import time
 
 # Function to run model per gridcell
 def grid_model(P_data, R_data, T_data, lai_data, params, cell = False):
@@ -291,3 +292,25 @@ def add_daily_variation(temp):
     std_month = std_dev.sel(month=month)
     variation = np.random.normal(0, std_month, size=temp.shape)
     return temp + variation
+
+
+def out2xarray2(output, reference):
+    output = np.moveaxis(output, 2, 0)  # move time axis to be first axis
+
+    # get dates and coordinates
+    times = date_range('2024-01-01', '2100-12-31')
+    lons = reference.lon.values
+    lats = reference.lat.values
+    
+    out_dict = {}
+    for i, out_name in enumerate(['runoff',
+                                  'evapotranspiration',
+                                  'soil_moisture',
+                                  'snow']):
+        out_xr = xr.DataArray(output[:, :, :, i], dims=('time', 'lat', 'lon'),
+                              coords={'time': times,
+                                      'lat': lats,
+                                      'lon': lons})
+        out_dict[out_name] = out_xr
+
+    return xr.Dataset(out_dict)
