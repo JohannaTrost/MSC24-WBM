@@ -3,6 +3,7 @@ import xarray as xr
 import run
 from scipy.signal import detrend
 from matplotlib import pyplot as plt
+from run_ac import *
 #import rioxarray
 import pyproj
 import geopandas as gpd
