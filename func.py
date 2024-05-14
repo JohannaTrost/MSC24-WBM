@@ -319,3 +319,38 @@ def out2xarray2(output, reference):
         out_dict[out_name] = out_xr
 
     return xr.Dataset(out_dict)
+
+
+def split_seasons(data):
+    """
+    Split the input data into seasons: MAM, JJA, SON, DJF.
+    
+    Parameters:
+        data (xarray.DataArray): Data array with 'time', 'lat', and 'lon' coordinates.
+        
+    Returns:
+        dict: A dictionary containing separate xarray DataArrays for each season.
+    """
+    # Extract month information from time coordinate
+    months = data['time'].dt.month
+
+    # Define seasonal masks
+    is_mam = (months >= 3) & (months <= 5)  # MAM: March, April, May
+    is_jja = (months >= 6) & (months <= 8)  # JJA: June, July, August
+    is_son = (months >= 9) & (months <= 11)  # SON: September, October, November
+
+    # For DJF, we need to handle the wrap-around between December and January
+    # Shift the months by one step and check if they are December, January, or February
+    shifted_months = months.roll(time=-1)
+    is_djf = ((months == 12) | (months == 1) | (months == 2)) & (shifted_months == 12)
+
+    # Initialize dictionary to store seasonal data arrays
+    seasonal_data = {}
+
+    # Store seasonal data arrays for each season
+    seasonal_data['spring'] = data.sel(time=is_mam)
+    seasonal_data['summer'] = data.sel(time=is_jja)
+    seasonal_data['autumn'] = data.sel(time=is_son)
+    seasonal_data['winter'] = data.sel(time=is_djf)
+
+    return seasonal_data
